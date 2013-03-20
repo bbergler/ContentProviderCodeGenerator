@@ -1,12 +1,5 @@
 package com.foxykeep.cpcodegenerator;
 
-import com.foxykeep.cpcodegenerator.generator.DatabaseGenerator;
-import com.foxykeep.cpcodegenerator.model.TableData;
-import com.foxykeep.cpcodegenerator.util.PathUtils;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -17,104 +10,124 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import com.foxykeep.cpcodegenerator.generator.DatabaseGenerator;
+import com.foxykeep.cpcodegenerator.model.TableData;
+import com.foxykeep.cpcodegenerator.util.PathUtils;
 
 public class Main {
 
-    public static void main(final String[] args) {
+	public static void main(final String[] args) {
 
-        final File fileInputDir = new File("input");
-        if (!fileInputDir.exists() || !fileInputDir.isDirectory()) {
-            return;
-        }
+		if (args.length > 0) {
 
-        String columnMetadataText;
-        final StringBuilder sb = new StringBuilder();
-        BufferedReader br;
-        try {
-            br = new BufferedReader(new FileReader(new File("res/column_metadata.txt")));
-            String line;
-            while ((line = br.readLine()) != null) {
-                sb.append(line).append("\n");
-            }
-            columnMetadataText = sb.toString();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            return;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
-        }
+			File input = new File(args[0]);
+			generateForFile(input);
+		} else {
+			final File fileInputDir = new File("input/");
+			if (!fileInputDir.exists() || !fileInputDir.isDirectory()) {
+				return;
+			}
+			for (File file : fileInputDir.listFiles()) {
+				final String fileName = file.getName();
+				if (fileName.equals("example")) {
+					// Bypass the example folder
+					continue;
+				}
+				System.out.println("Generating code for " + fileName);
 
-        // For each file in the input folder
-        for (File file : fileInputDir.listFiles()) {
-            final String fileName = file.getName();
-            if (fileName.equals("example")) {
-                // Bypass the example folder
-                continue;
-            }
-            System.out.println("Generating code for " + fileName);
+				generateForFile(file);
 
-            final char[] buffer = new char[2048];
-            sb.setLength(0);
-            final Reader in;
-            try {
-                in = new InputStreamReader(new FileInputStream(file), "UTF-8");
-                int read;
-                do {
-                    read = in.read(buffer, 0, buffer.length);
-                    if (read != -1) {
-                        sb.append(buffer, 0, read);
-                    }
-                } while (read >= 0);
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-                return;
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-                return;
-            } catch (IOException e) {
-                e.printStackTrace();
-                return;
-            }
+			}
+		}
 
-            final String content = sb.toString();
-            if (content.length() == 0) {
-                System.out.println("file is empty.");
-                return;
-            }
+		// For each file in the input folder
 
-            try {
-                final JSONObject root = new JSONObject(content);
-                final JSONObject jsonDatabase = root.getJSONObject("database");
+	}
 
-                // Classes generation
-                String classPackage, classesPrefix, contentClassesPrefix, dbAuthorityPackage,
-                        providerFolder;
-                int dbVersion;
-                classPackage = jsonDatabase.getString("package");
-                classesPrefix = jsonDatabase.getString("classes_prefix");
-                contentClassesPrefix = jsonDatabase.optString("content_classes_prefix", "");
-                dbAuthorityPackage = jsonDatabase.optString("authority_package", classPackage);
-                providerFolder = jsonDatabase.optString("provider_folder",
-                        PathUtils.PROVIDER_DEFAULT);
-                dbVersion = jsonDatabase.getInt("version");
+	private static void generateForFile(File file) {
 
-                ArrayList<TableData> classDataList = TableData.getClassesData(root.getJSONArray(
-                        "tables"), contentClassesPrefix, dbVersion);
+		String columnMetadataText;
+		final StringBuilder sb = new StringBuilder();
+		BufferedReader br;
+		try {
+			br = new BufferedReader(new FileReader(new File("res/column_metadata.txt")));
+			String line;
+			while ((line = br.readLine()) != null) {
+				sb.append(line).append("\n");
+			}
+			columnMetadataText = sb.toString();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+			return;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return;
+		}
 
-                // Database generation
-                DatabaseGenerator.generate(fileName, classPackage, dbVersion, dbAuthorityPackage,
-                        classesPrefix, classDataList, providerFolder);
+		final Reader in;
+		sb.setLength(0);
+		final char[] buffer = new char[2048];
+		final String fileName = file.getName();
+		try {
+			in = new InputStreamReader(new FileInputStream(file), "UTF-8");
+			int read;
+			do {
+				read = in.read(buffer, 0, buffer.length);
+				if (read != -1) {
+					sb.append(buffer, 0, read);
+				}
+			} while (read >= 0);
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+			return;
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+			return;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return;
+		}
 
-                FileCache.saveFile(PathUtils.getAndroidFullPath(fileName, classPackage,
-                        providerFolder + "." + PathUtils.UTIL) + "ColumnMetadata.java",
-                        String.format(columnMetadataText, classPackage,
-                                providerFolder + "." + PathUtils.UTIL));
+		final String content = sb.toString();
+		if (content.length() == 0) {
+			System.out.println("file is empty.");
+			return;
+		}
 
-            } catch (JSONException e) {
-                e.printStackTrace();
-                return;
-            }
-        }
-    }
+		try {
+			final JSONObject root = new JSONObject(content);
+			final JSONObject jsonDatabase = root.getJSONObject("database");
+
+			// Classes generation
+			String classPackage, classesPrefix, contentClassesPrefix, dbAuthorityPackage, providerFolder, modelFolder, path;
+			int dbVersion;
+			classPackage = jsonDatabase.getString("package");
+			classesPrefix = jsonDatabase.getString("classes_prefix");
+			contentClassesPrefix = jsonDatabase.optString("content_classes_prefix", "");
+			dbAuthorityPackage = jsonDatabase.optString("authority_package", classPackage);
+			providerFolder = jsonDatabase.optString("provider_folder", PathUtils.PROVIDER_DEFAULT);
+			modelFolder = jsonDatabase.optString("model_folder", PathUtils.MODEL_DEFAULT);
+			dbVersion = jsonDatabase.getInt("version");
+			path = jsonDatabase.getString("path");
+
+			ArrayList<TableData> classDataList = TableData.getClassesData(root.getJSONArray("tables"),
+					contentClassesPrefix, dbVersion);
+
+			// Database generation
+			DatabaseGenerator.generate(path + fileName, classPackage, dbVersion, dbAuthorityPackage, classesPrefix,
+					classDataList, providerFolder);
+
+			ModelGenerator.generate(path + fileName, classPackage, classDataList, modelFolder);
+
+		} catch (JSONException e) {
+			e.printStackTrace();
+			return;
+		}
+		return;
+	}
 }

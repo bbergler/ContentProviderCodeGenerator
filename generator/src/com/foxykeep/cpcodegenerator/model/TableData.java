@@ -16,6 +16,7 @@ public class TableData {
     public String dbClassName = null;
     public String dbTableName = null;
     public String dbConstantName = null;
+    public String modelName = null;
 
     public int version;
 
@@ -26,6 +27,7 @@ public class TableData {
     public TableData(final JSONObject json, final String contentClassesPrefix, final int dbVersion)
             throws JSONException {
         dbClassName = contentClassesPrefix + json.getString("table_name");
+        modelName = json.getString("model_name");
         dbTableName = NameUtils.createLowerCamelCaseName(dbClassName);
         dbConstantName = NameUtils.createConstantName(dbTableName);
 
