@@ -16,6 +16,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.foxykeep.cpcodegenerator.generator.DatabaseGenerator;
+import com.foxykeep.cpcodegenerator.generator.ModelGenerator;
 import com.foxykeep.cpcodegenerator.model.TableData;
 import com.foxykeep.cpcodegenerator.util.PathUtils;
 
@@ -72,7 +73,8 @@ public class Main {
 		final Reader in;
 		sb.setLength(0);
 		final char[] buffer = new char[2048];
-		final String fileName = file.getName();
+		System.out.println(remove(file.getName()));
+		final String fileName = remove(file.getName())+".gen";
 		try {
 			in = new InputStreamReader(new FileInputStream(file), "UTF-8");
 			int read;
@@ -113,7 +115,7 @@ public class Main {
 			providerFolder = jsonDatabase.optString("provider_folder", PathUtils.PROVIDER_DEFAULT);
 			modelFolder = jsonDatabase.optString("model_folder", PathUtils.MODEL_DEFAULT);
 			dbVersion = jsonDatabase.getInt("version");
-			path = jsonDatabase.getString("path");
+			path = jsonDatabase.optString("path",PathUtils.OUTPUT_DEFAULT);
 
 			ArrayList<TableData> classDataList = TableData.getClassesData(root.getJSONArray("tables"),
 					contentClassesPrefix, dbVersion);
@@ -123,6 +125,12 @@ public class Main {
 					classDataList, providerFolder);
 
 			ModelGenerator.generate(path + fileName, classPackage, classDataList, modelFolder);
+			
+			FileCache.saveFile(PathUtils.getAndroidFullPath(path+fileName, classPackage,
+                    providerFolder + "." + PathUtils.UTIL) + "ColumnMetadata.java",
+                    String.format(columnMetadataText, classPackage,
+                            providerFolder + "." + PathUtils.UTIL));
+
 
 		} catch (JSONException e) {
 			e.printStackTrace();
@@ -130,4 +138,15 @@ public class Main {
 		}
 		return;
 	}
+	
+	 private static String remove(String in){
+	        if(in == null) {
+	            return null;
+	        }
+	        int p = in.lastIndexOf(".");
+	        if(p <= 0){
+	            return in;
+	        }
+	        return in.substring(0, p);
+	    }
 }
