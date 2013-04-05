@@ -115,7 +115,8 @@ public class Main {
 			providerFolder = jsonDatabase.optString("provider_folder", PathUtils.PROVIDER_DEFAULT);
 			modelFolder = jsonDatabase.optString("model_folder", PathUtils.MODEL_DEFAULT);
 			dbVersion = jsonDatabase.getInt("version");
-			path = jsonDatabase.optString("path",PathUtils.OUTPUT_DEFAULT);
+			path = file.getAbsoluteFile().getParent()+"/"+jsonDatabase.optString("path",PathUtils.OUTPUT_DEFAULT);
+			
 
 			ArrayList<TableData> classDataList = TableData.getClassesData(root.getJSONArray("tables"),
 					contentClassesPrefix, dbVersion);

@@ -14,6 +14,7 @@ public class FileCache {
     public static void saveFile(final String path, final String content) {
 
         try {
+        	System.out.println("writing file to "+new File(path).getAbsolutePath().toString());
             createFileDir(path);
 
             final ByteArrayInputStream bais = new ByteArrayInputStream(content.getBytes());
