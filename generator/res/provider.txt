@@ -1,5 +1,6 @@
 package %1$s.%11$s;
 
+%2$s
 import android.content.ContentProvider;
 import android.content.ContentProviderOperation;
 import android.content.ContentProviderResult;
@@ -17,7 +18,6 @@ import android.provider.BaseColumns;
 import android.util.Log;
 
 import com.woohoo.cashcoow.BuildConfig;
-%2$s
 import java.util.ArrayList;
 
 /**
@@ -25,11 +25,11 @@ import java.util.ArrayList;
  * <p>
  * (More information available https://github.com/foxykeep/ContentProviderCodeGenerator)
  */
-public final class %3$sProvider extends ContentProvider {
+public %14$sclass %3$sProvider extends ContentProvider {
 
     private static final String LOG_TAG = %3$sProvider.class.getSimpleName();
 
-    private static final boolean ACTIVATE_ALL_LOGS = false;
+    /* package */ static final boolean ACTIVATE_ALL_LOGS = false;
 
     protected static final String DATABASE_NAME = "%3$sProvider.db";
 
@@ -44,7 +44,7 @@ public final class %3$sProvider extends ContentProvider {
 
     private static final UriMatcher sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
 
-	private enum UriType {
+    private enum UriType {
 %5$s
         private String mTableName;
         private String mType;
@@ -88,7 +88,7 @@ public final class %3$sProvider extends ContentProvider {
             if (mDatabase != null) {
                 mDatabase.setLockingEnabled(true);
             }
-		}
+        }
 
         return mDatabase;
     }
@@ -135,8 +135,8 @@ public final class %3$sProvider extends ContentProvider {
 
         switch (uriType) {
 %8$s                id = uri.getPathSegments().get(1);
-                result = db.delete(uriType.getTableName(), whereWithId(id, selection), 
-                        selectionArgs);
+                result = db.delete(uriType.getTableName(), whereWithId(selection),
+                        addIdToSelectionArgs(id, selectionArgs));
                 break;
 %9$s                result = db.delete(uriType.getTableName(), selection, selectionArgs);
                 break;
@@ -237,7 +237,6 @@ public final class %3$sProvider extends ContentProvider {
             String sortOrder) {
 
         Cursor c = null;
-        Uri notificationUri = %3$sContent.CONTENT_URI;
         UriType uriType = matchUri(uri);
         Context context = getContext();
         // Pick the correct database for this operation
@@ -250,8 +249,8 @@ public final class %3$sProvider extends ContentProvider {
 
         switch (uriType) {
 %8$s                id = uri.getPathSegments().get(1);
-                c = db.query(uriType.getTableName(), projection, whereWithId(id, selection),
-                        selectionArgs, null, null, sortOrder);
+                c = db.query(uriType.getTableName(), projection, whereWithId(selection),
+                        addIdToSelectionArgs(id, selectionArgs), null, null, sortOrder);
                 break;
 %9$s                c = db.query(uriType.getTableName(), projection, selection, selectionArgs,
                         null, null, sortOrder);
@@ -259,22 +258,34 @@ public final class %3$sProvider extends ContentProvider {
         }
 
         if ((c != null) && !isTemporary()) {
-            c.setNotificationUri(getContext().getContentResolver(), notificationUri);
+            c.setNotificationUri(getContext().getContentResolver(), uri);
         }
         return c;
     }
 
-    private String whereWithId(String id, String selection) {
+    private String whereWithId(String selection) {
         StringBuilder sb = new StringBuilder(256);
         sb.append(BaseColumns._ID);
-        sb.append(" = ");
-        sb.append(id);
+        sb.append(" = ?");
         if (selection != null) {
             sb.append(" AND (");
             sb.append(selection);
             sb.append(')');
         }
         return sb.toString();
+    }
+
+    private String[] addIdToSelectionArgs(String id, String[] selectionArgs) {
+
+        if (selectionArgs == null) {
+            return new String[] { id };
+        }
+
+        int length = selectionArgs.length;
+        String[] newSelectionArgs = new String[length + 1];
+        newSelectionArgs[0] = id;
+        System.arraycopy(selectionArgs, 0, newSelectionArgs, 1, length);
+        return newSelectionArgs;
     }
 
     @Override
@@ -294,8 +305,8 @@ public final class %3$sProvider extends ContentProvider {
 
         switch (uriType) {
 %8$s                String id = uri.getPathSegments().get(1);
-                result = db.update(uriType.getTableName(), values, whereWithId(id, selection),
-                        selectionArgs);
+                result = db.update(uriType.getTableName(), values, whereWithId(selection),
+                    addIdToSelectionArgs(id, selectionArgs));
                 break;
 %9$s                result = db.update(uriType.getTableName(), values, selection, selectionArgs);
                 break;

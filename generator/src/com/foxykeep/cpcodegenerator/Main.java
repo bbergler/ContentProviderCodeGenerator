@@ -60,7 +60,7 @@ public class Main {
 			String line;
 			while ((line = br.readLine()) != null) {
 				sb.append(line).append("\n");
-			}
+            }
 			columnMetadataText = sb.toString();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -108,6 +108,7 @@ public class Main {
 			// Classes generation
 			String classPackage, classesPrefix, contentClassesPrefix, dbAuthorityPackage, providerFolder, modelFolder, path;
 			int dbVersion;
+            boolean hasProviderSubclasses;
 			classPackage = jsonDatabase.getString("package");
 			classesPrefix = jsonDatabase.getString("classes_prefix");
 			contentClassesPrefix = jsonDatabase.optString("content_classes_prefix", "");
@@ -115,19 +116,22 @@ public class Main {
 			providerFolder = jsonDatabase.optString("provider_folder", PathUtils.PROVIDER_DEFAULT);
 			modelFolder = jsonDatabase.optString("model_folder", PathUtils.MODEL_DEFAULT);
 			dbVersion = jsonDatabase.getInt("version");
+            hasProviderSubclasses = jsonDatabase.optBoolean("has_subclasses");
 			path = file.getAbsoluteFile().getParent()+"/"+jsonDatabase.optString("path",PathUtils.OUTPUT_DEFAULT);
 			
 
 			ArrayList<TableData> classDataList = TableData.getClassesData(root.getJSONArray("tables"),
 					contentClassesPrefix, dbVersion);
+	
+
 
 			// Database generation
-			DatabaseGenerator.generate(path + fileName, classPackage, dbVersion, dbAuthorityPackage, classesPrefix,
-					classDataList, providerFolder);
+			DatabaseGenerator.generate(path + fileName, classPackage, dbVersion, dbAuthorityPackage,
+                             classesPrefix, classDataList, providerFolder, hasProviderSubclasses);
 
 			ModelGenerator.generate(path + fileName, classPackage, classDataList, modelFolder,classesPrefix,providerFolder);
 			
-			FileCache.saveFile(PathUtils.getAndroidFullPath(path+fileName, classPackage,
+			FileCache.saveFile(PathUtils.getAndroidFullPath(path + fileName, classPackage,
                     providerFolder + "." + PathUtils.UTIL) + "ColumnMetadata.java",
                     String.format(columnMetadataText, classPackage,
                             providerFolder + "." + PathUtils.UTIL));

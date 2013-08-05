@@ -18,31 +18,9 @@ import com.foxykeep.cpcodegenerator.util.PathUtils;
 
 public class ModelGenerator {
 
-//	enum Types {
-//		text("String"), integer("Integer"), float("Float");
-//
-//		Types(String str) {
-//			this.str = str;
-//		}
-//
-//		private String str;
-//
-//		public String val() {
-//			return str;
-//		}
-//
-//	}
-	static {
-
-	}
-	public ModelGenerator() {
-
-	}
-
     public static void generate(String fileName, String classPackage, ArrayList<TableData> classDataList,
 			String modelFolder, String classesPrefix, String providerFolder) {
-		System.out.println(classPackage + " " + classDataList.toString());
-		
+
 		Map<String,String> map = new HashMap<String, String>();
 		map.put("text", "String");
 		map.put("real", "Float");
@@ -113,12 +91,7 @@ public class ModelGenerator {
 	private static String buildEnum(FieldData fieldData) {
 		String name =fieldData.dbName.substring(0, 1).toUpperCase()+fieldData.dbName.substring(1);
 		String enumCode ="    public enum "+name+"\n    {\n      ";
-//		System.out.println(Arrays.toString(fieldData.dbType.split("|")));
 		enumCode+=fieldData.type.split("\\|")[1]+";\n    }\n\n";
-//		public enum V
-//		{
-//			test,asd;
-//		}
 		return enumCode;
 	}
 
