@@ -28,13 +28,7 @@ In order to use it, here are the steps to follow :
 Building/Running from the CLI
 -----------------------------
 ```
-    mkdir generator/bin
-    mkdir generator/bin/input
-    cd generator/bin
-    ln -s ../res .
-    javac $(find ../src -name *.java) -d .
-    cp ../input/example/sample.json ./input
-    java com/foxykeep/cpcodegenerator/Main
+./gradlew -Pjson=file.json
 ```
 
 Example

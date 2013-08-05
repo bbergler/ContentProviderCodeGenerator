@@ -1,0 +1,4 @@
+
+task wrapper(type: org.gradle.api.tasks.wrapper.Wrapper) {
+    gradleVersion = '1.6'
+}

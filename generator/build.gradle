@@ -1,0 +1,19 @@
+apply plugin: 'java'
+apply plugin: 'application'
+
+mainClassName = "com.foxykeep.cpcodegenerator.Main"
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src'
+        }
+    }
+}
+
+run{
+    if(project.hasProperty("json")){
+        args json
+    }
+}
+
