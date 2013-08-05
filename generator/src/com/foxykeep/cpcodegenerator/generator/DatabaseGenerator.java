@@ -131,9 +131,15 @@ public class DatabaseGenerator {
                 hasTextField = false;
 
                 for (int i = 0, n = tableData.fieldList.size(); i < n; i++) {
+                	
                     final FieldData fieldData = tableData.fieldList.get(i);
+                    
+                    if(fieldData.dbIsModelOnly)
+                    	continue;
 
                     final boolean isNotLast = i != n - 1;
+                    
+                    
 
                     sbEnumFields.append(TAB3)
                             .append(fieldData.dbConstantName)
@@ -251,6 +257,9 @@ public class DatabaseGenerator {
                     hasPreviousPrimaryKey = false;
 
                     for (FieldData fieldData : tableData.fieldList) {
+                        if(fieldData.dbIsModelOnly)
+                        	continue;
+                    	
                         if (fieldData.version > curVers) {
                             // This field doesn't exist yet in this version
                             continue;
@@ -308,6 +317,8 @@ public class DatabaseGenerator {
 
                     hasPreviousUpgradeElements = false;
                     for (FieldData fieldData : upgradeFieldDataList) {
+                        if(fieldData.dbIsModelOnly)
+                        	continue;
                         if (hasPreviousUpgradeElements) {
                             sbUpgradeTableCommentNewFields.append(", ");
                         }
@@ -478,6 +489,8 @@ public class DatabaseGenerator {
                 if (upgradeFieldList != null) {
                     boolean firstField = true;
                     for (FieldData fieldData : upgradeFieldList) {
+                        if(fieldData.dbIsModelOnly)
+                        	continue;
                         if (!firstField) {
                             sbUpgradeDatabaseCommentFields.append(", ");
                         }

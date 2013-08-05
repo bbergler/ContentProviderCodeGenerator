@@ -125,7 +125,7 @@ public class Main {
 			DatabaseGenerator.generate(path + fileName, classPackage, dbVersion, dbAuthorityPackage, classesPrefix,
 					classDataList, providerFolder);
 
-			ModelGenerator.generate(path + fileName, classPackage, classDataList, modelFolder);
+			ModelGenerator.generate(path + fileName, classPackage, classDataList, modelFolder,classesPrefix,providerFolder);
 			
 			FileCache.saveFile(PathUtils.getAndroidFullPath(path+fileName, classPackage,
                     providerFolder + "." + PathUtils.UTIL) + "ColumnMetadata.java",

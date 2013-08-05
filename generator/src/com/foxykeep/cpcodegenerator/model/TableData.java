@@ -21,6 +21,8 @@ public class TableData {
     public int version;
 
     public List<FieldData> fieldList = new ArrayList<FieldData>();
+    
+    public List<String> importList = new ArrayList<String>();
 
     public Map<Integer, List<FieldData>> upgradeFieldMap = new HashMap<Integer, List<FieldData>>();
 
@@ -40,6 +42,13 @@ public class TableData {
         final JSONArray jsonFieldArray = json.getJSONArray("fields");
         for (int i = 0, n = jsonFieldArray.length(); i < n; i++) {
             fieldList.add(new FieldData(jsonFieldArray.getJSONObject(i)));
+        }
+        
+        final JSONArray jsonImportArray = json.optJSONArray("imports");
+        if(jsonImportArray!=null)
+        
+        for (int i = 0, n = jsonImportArray.length(); i < n; i++) {
+            importList.add(new String(jsonImportArray.getString(i)));
         }
 
         for (FieldData fieldData : fieldList) {

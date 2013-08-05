@@ -16,6 +16,7 @@ import android.net.Uri;
 import android.provider.BaseColumns;
 import android.util.Log;
 
+import com.woohoo.cashcoow.BuildConfig;
 %2$s
 import java.util.ArrayList;
 
@@ -32,7 +33,7 @@ public final class %3$sProvider extends ContentProvider {
 
     protected static final String DATABASE_NAME = "%3$sProvider.db";
 
-    public static final String AUTHORITY = "%4$s.provider.%3$sProvider";
+    public static final String AUTHORITY = BuildConfig.PROVIDER_AUTHORITY;// "%4$s.provider.%3$sProvider";
 
     static {
         Uri.parse("content://" + AUTHORITY + "/integrityCheck");
