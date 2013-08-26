@@ -6,7 +6,6 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,13 +20,7 @@ public class ModelGenerator {
     public static void generate(String fileName, String classPackage, ArrayList<TableData> classDataList,
 			String modelFolder, String classesPrefix, String providerFolder) {
 
-		Map<String,String> map = new HashMap<String, String>();
-		map.put("text", "String");
-		map.put("real", "Float");
-		map.put("double", "Double");
-		map.put("integer", "Integer");
-        map.put("long", "Long");
-        map.put("boolean", "Boolean");
+
 		final StringBuilder sb = new StringBuilder();
 		BufferedReader br;
 		String line;
@@ -53,18 +46,23 @@ public class ModelGenerator {
 				
 
 				for (FieldData fieldData : tableData.fieldList) {
+                    String accessModifier="    public ";
 					if(!fieldData.annotation.isEmpty())
-						sbFields.append("     "+fieldData.annotation+"\n");
-					if(map.get(fieldData.type)!=null)
-					sbFields.append("     public " + map.get(fieldData.type) + " " + fieldData.dbName + ";\n");
+						sbFields.append("    "+fieldData.annotation+"\n");
+                    if(fieldData.constructor) {
+                          accessModifier+="final ";
+                    }
+
+					if(fieldData.getModelType()!=null)
+					sbFields.append(accessModifier + fieldData.getModelType() + " " + fieldData.getModelName() + ";\n");
 					else if(fieldData.type.contains("enum|"))
 					{
-						String name =fieldData.dbName.substring(0, 1).toUpperCase()+fieldData.dbName.substring(1);
-						sbFields.append("     public " + name + " " + fieldData.dbName + ";\n");
+						String name =fieldData.getModelName().substring(0, 1).toUpperCase()+fieldData.getModelName().substring(1);
+						sbFields.append(accessModifier + name + " " + fieldData.getModelName() + ";\n");
 						sbMethods.append(buildEnum(fieldData));
 					}
 					else
-						sbFields.append("     public " + fieldData.type + " " + fieldData.dbName + ";\n");
+						sbFields.append(accessModifier+ fieldData.type + " " + fieldData.getModelName() + ";\n");
 				}
 				sbImports.append("import "+classPackage+"."+providerFolder+"."+classesPrefix+"Content."+tableData.dbClassName+";\n");
 				sbImports.append("import android.content.ContentValues;\n");
@@ -72,6 +70,7 @@ public class ModelGenerator {
 					sbImports.append("import "+imports+";\n");	
 				}
 				sbImplements.setLength(0);
+                sbMethods.append(generateCtor(tableData.modelName,tableData.fieldList, tableData.dbClassName));
 				sbMethods.append(generateToContentValues(tableData.fieldList,tableData.dbClassName)+"\n");
 				sbMethods.append(generateToString(tableData.fieldList,tableData.modelName)+"\n");
 
@@ -88,7 +87,26 @@ public class ModelGenerator {
 		}
 	}
 
-	private static String buildEnum(FieldData fieldData) {
+    private static String generateCtor(String modelName, List<FieldData> fieldList, String dbClassName) {
+        String args="";
+        String body="";
+        for (FieldData fieldData : fieldList) {
+            if(fieldData.constructor)
+            {
+               if(args.length()>0) args+=", ";
+               args+=fieldData.getModelType()+" "+fieldData.dbName;
+                body+="      this."+fieldData.dbName+" = "+fieldData.dbName+";\n";
+            }
+        }
+
+           String ctor ="";
+        if(args.length()>0)
+        ctor+="    public "+modelName+"("+args+")"+"{\n"+body+"\n    }\n\n";
+
+        return ctor;
+    }
+
+    private static String buildEnum(FieldData fieldData) {
 		String name =fieldData.dbName.substring(0, 1).toUpperCase()+fieldData.dbName.substring(1);
 		String enumCode ="    public enum "+name+"\n    {\n      ";
 		enumCode+=fieldData.type.split("\\|")[1]+";\n    }\n\n";
@@ -109,9 +127,9 @@ public class ModelGenerator {
 				if(!fieldData.annotation.contains("@SerializedName(\"id\")"))
 				continue;
 			}
-			String value=fieldData.dbName;
-			if(!fieldData.custom_value.isEmpty())
-				value=fieldData.custom_value;
+			String value=fieldData.getModelName();
+			if(!fieldData.customValue.isEmpty())
+				value=fieldData.customValue;
 			s+="        cv.put("+dbClassName+".Columns."+name+".getName(), " +value+");\n";
 			
 		}
@@ -128,28 +146,30 @@ public class ModelGenerator {
 		
 		for (FieldData fieldData : fieldList) {
 //			
-			String name =fieldData.dbName;
+			String name =fieldData.getModelName();
 
-			s+="        if("+name+" != null)\n";
-			if(name.startsWith("_"))
-				name=name.substring(1);
-			s+="          sb.append(\""+name+"= \"+" +fieldData.dbName+"+\" \");\n";
-			s+="        else null_vars=true;\n";
+			s+="        if("+name+" != null){\n";
+//			if(name.startsWith("_"))
+//				name=name.substring(1);
+			s+="          sb.append(\""+name+"= \"+" +fieldData.getModelName()+"+\" \");\n";
+            s+="        }\n";
+            s+="        else{\n";
+            s+="          null_vars=true;\n";
+            s+="        }\n";
 			
 		}
 		s+="        if(null_vars){\n";
 		s+="          sb.append(\"elements which are null:\");\n";
 		for (FieldData fieldData : fieldList) {
-//			
-			String name =fieldData.dbName;
+			String name =fieldData.getModelName();
 
-		s+="          if("+name+" == null)\n";
-			if(name.startsWith("_"))
-				name=name.substring(1);
+		s+="          if("+name+" == null){\n";
+//			if(name.startsWith("_"))
+//				name=name.substring(1);
 		s+="            sb.append(\""+name+" \");\n";
-			
+        s+="          }\n";
 		}
-		s+="        }";
+		s+="        }\n";
 		s+="        return sb.toString();\n";
 		s+="    }";
 		return s;

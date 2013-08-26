@@ -6,6 +6,9 @@ import com.foxykeep.cpcodegenerator.util.NameUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class FieldData {
 
     public String name;
@@ -23,9 +26,10 @@ public class FieldData {
     public boolean dbHasIndex;
     public boolean dbSkipBulkInsert;
     public boolean dbIsModelOnly;
-    public String custom_value;
+    public String customValue;
     public String dbDefaultValue;
     public boolean dbIsUnique;
+    public boolean constructor;
 
     public FieldData(final JSONObject json) throws JSONException {
         name = json.getString("name");
@@ -37,7 +41,8 @@ public class FieldData {
         dbIsPrimaryKey = json.optBoolean("is_primary_key", false);
         dbIsId = json.optBoolean("is_id", false);
         annotation = json.optString("annotated_with","");
-        custom_value = json.optString("custom_value","");
+        customValue = json.optString("custom_value","");
+        constructor = json.optBoolean("ctor",false);
         dbIsAutoincrement = json.optBoolean("is_autoincrement", false);
         if (dbIsId) {
             if (!dbIsPrimaryKey) {
@@ -85,5 +90,35 @@ public class FieldData {
         } else {
             return "-1";
         }
+    }
+
+    public String getModelType(){
+        Map<String,String> map = new HashMap<String, String>();
+        map.put("text", "String");
+        map.put("real", "Float");
+        map.put("double", "Double");
+        map.put("integer", "Integer");
+        map.put("long", "Long");
+        map.put("boolean", "Boolean");
+        return map.get(type);
+    }
+
+    public String getModelName(){
+        if(dbName.contains("_")){
+            String result="";
+            for (int i = 0; i < dbName.length(); i++) {
+                if(dbName.charAt(i)=='_')
+                {
+                    if(i==0) continue;
+                    i++;
+                    result+=new String(""+dbName.charAt(i)).toUpperCase();
+
+                }else{
+                    result+=dbName.charAt(i);
+                }
+            }
+            return result;
+        }
+        else {return dbName;}
     }
 }
