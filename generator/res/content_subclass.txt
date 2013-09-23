@@ -39,7 +39,7 @@
             }
         }
 
-        public static final String[] PROJECTION = new String[] {
+        public static final String[] PROJECTION = new String[]{
 %7$s
         };
 

@@ -6,6 +6,8 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,16 +36,16 @@ public class ModelGenerator {
 			final StringBuilder sbFields = new StringBuilder();
 
 			final StringBuilder sbMethods = new StringBuilder();
-			
+
 			final StringBuilder sbImplements = new StringBuilder();
-			
+
 			final StringBuilder sbImports = new StringBuilder();
 
 			for (TableData tableData : classDataList) {
 				sbFields.setLength(0);
 				sbMethods.setLength(0);
 				sbImports.setLength(0);
-				
+
 
 				for (FieldData fieldData : tableData.fieldList) {
                     String accessModifier="    public ";
@@ -64,10 +66,13 @@ public class ModelGenerator {
 					else
 						sbFields.append(accessModifier+ fieldData.type + " " + fieldData.getModelName() + ";\n");
 				}
-				sbImports.append("import "+classPackage+"."+providerFolder+"."+classesPrefix+"Content."+tableData.dbClassName+";\n");
-				sbImports.append("import android.content.ContentValues;\n");
+                sbImports.append("import android.content.ContentValues;\n");
+                sbImports.append("\n");
+                tableData.importList.add(classPackage+"."+providerFolder+"."+classesPrefix+"Content."+tableData.dbClassName);
+                Collections.sort(tableData.importList);
+
 				for (String imports : tableData.importList) {
-					sbImports.append("import "+imports+";\n");	
+					sbImports.append("import "+imports+";\n");
 				}
 				sbImplements.setLength(0);
                 sbMethods.append(generateCtor(tableData.modelName,tableData.fieldList, tableData.dbClassName));
@@ -101,20 +106,20 @@ public class ModelGenerator {
 
            String ctor ="";
         if(args.length()>0)
-        ctor+="    public "+modelName+"("+args+")"+"{\n"+body+"\n    }\n\n";
+        ctor+="    public "+modelName+"("+args+")"+" {\n"+body+"\n    }\n\n";
 
         return ctor;
     }
 
     private static String buildEnum(FieldData fieldData) {
 		String name =fieldData.dbName.substring(0, 1).toUpperCase()+fieldData.dbName.substring(1);
-		String enumCode ="    public enum "+name+"\n    {\n      ";
+		String enumCode ="    public enum "+name+" {\n        ";
 		enumCode+=fieldData.type.split("\\|")[1]+";\n    }\n\n";
 		return enumCode;
 	}
 
 	private static String generateToContentValues(List<FieldData> fieldList, String dbClassName) {
-		String s="    public ContentValues getContentValues(){\n";
+		String s="    public ContentValues getContentValues() {\n";
 		s+="        ContentValues cv = new ContentValues();\n";
 		for (FieldData fieldData : fieldList) {
 //			
@@ -131,44 +136,30 @@ public class ModelGenerator {
 			if(!fieldData.customValue.isEmpty())
 				value=fieldData.customValue;
 			s+="        cv.put("+dbClassName+".Columns."+name+".getName(), " +value+");\n";
-			
+
 		}
 		s+="        return cv;\n";
 		s+="    }\n";
 		return s;
 	}
-	
+
 	private static String generateToString(List<FieldData> fieldList, String modelName) {
-		String s="    public String toString(){\n";
-		s+="        boolean null_vars=false;\n";
+		String s="    public String toString() {\n";
 		s+="        StringBuilder sb = new StringBuilder();\n";
+        s+="        StringBuilder nullVars = new StringBuilder();\n";
 		s+="        sb.append(\"Model:"+modelName+"\");\n";
-		
-		for (FieldData fieldData : fieldList) {
-//			
-			String name =fieldData.getModelName();
 
-			s+="        if("+name+" != null){\n";
-//			if(name.startsWith("_"))
-//				name=name.substring(1);
-			s+="          sb.append(\""+name+"= \"+" +fieldData.getModelName()+"+\" \");\n";
-            s+="        }\n";
-            s+="        else{\n";
-            s+="          null_vars=true;\n";
-            s+="        }\n";
-			
-		}
-		s+="        if(null_vars){\n";
-		s+="          sb.append(\"elements which are null:\");\n";
 		for (FieldData fieldData : fieldList) {
 			String name =fieldData.getModelName();
+			s+="        if ("+name+" != null) {\n";
+			s+="            sb.append(\""+name+"= \" + " +fieldData.getModelName()+");\n";
+            s+="        } else {\n";
+            s+="            nullVars.append(\""+name+", \");\n";
+            s+="        }\n";
 
-		s+="          if("+name+" == null){\n";
-//			if(name.startsWith("_"))
-//				name=name.substring(1);
-		s+="            sb.append(\""+name+" \");\n";
-        s+="          }\n";
 		}
+		s+="        if (nullVars.length() > 0) {\n";
+		s+="            sb.append(\"elements which are null:\" + nullVars.toString());\n";
 		s+="        }\n";
 		s+="        return sb.toString();\n";
 		s+="    }";

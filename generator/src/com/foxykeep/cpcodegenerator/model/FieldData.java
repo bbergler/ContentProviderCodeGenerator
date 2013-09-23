@@ -104,21 +104,24 @@ public class FieldData {
     }
 
     public String getModelName(){
-        if(dbName.contains("_")){
-            String result="";
-            for (int i = 0; i < dbName.length(); i++) {
-                if(dbName.charAt(i)=='_')
-                {
-                    if(i==0) continue;
-                    i++;
-                    result+=new String(""+dbName.charAt(i)).toUpperCase();
+//        if(dbName.contains("_")){
+//            String result="";
+//            for (int i = 0; i < dbName.length(); i++) {
+//                if(dbName.charAt(i)=='_')
+//                {
+//                    if(i==0) continue;
+//                    i++;
+//                    result+=new String(""+dbName.charAt(i)).toUpperCase();
+//
+//                }else{
+//                    result+=dbName.charAt(i);
+//                }
+//            }
+//            return result;
+//        }
+//        else {
+        return dbName;
+// }
 
-                }else{
-                    result+=dbName.charAt(i);
-                }
-            }
-            return result;
-        }
-        else {return dbName;}
     }
 }
