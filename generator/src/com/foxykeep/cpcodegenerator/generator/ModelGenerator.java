@@ -1,21 +1,14 @@
 package com.foxykeep.cpcodegenerator.generator;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import com.foxykeep.cpcodegenerator.FileCache;
 import com.foxykeep.cpcodegenerator.model.FieldData;
 import com.foxykeep.cpcodegenerator.model.TableData;
 import com.foxykeep.cpcodegenerator.util.PathUtils;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class ModelGenerator {
 
@@ -45,7 +38,7 @@ public class ModelGenerator {
 				sbFields.setLength(0);
 				sbMethods.setLength(0);
 				sbImports.setLength(0);
-
+                String defaultValuePostString = "";
 
 				for (FieldData fieldData : tableData.fieldList) {
                     String accessModifier="    public ";
@@ -54,9 +47,12 @@ public class ModelGenerator {
                     if(fieldData.constructor) {
                           accessModifier+="final ";
                     }
+                    if(!fieldData.default_value.isEmpty()){
+                        defaultValuePostString = " = " + fieldData.default_value;
+                    }
 
 					if(fieldData.getModelType()!=null)
-					sbFields.append(accessModifier + fieldData.getModelType() + " " + fieldData.getModelName() + ";\n");
+					sbFields.append(accessModifier + fieldData.getModelType() + " " + fieldData.getModelName() + defaultValuePostString + ";\n");
 					else if(fieldData.type.contains("enum|"))
 					{
 						String name =fieldData.getModelName().substring(0, 1).toUpperCase()+fieldData.getModelName().substring(1);
@@ -64,7 +60,7 @@ public class ModelGenerator {
 						sbMethods.append(buildEnum(fieldData));
 					}
 					else
-						sbFields.append(accessModifier+ fieldData.type + " " + fieldData.getModelName() + ";\n");
+						sbFields.append(accessModifier+ fieldData.type + " " + fieldData.getModelName() + defaultValuePostString + ";\n");
 				}
                 sbImports.append("import android.content.ContentValues;\n");
                 sbImports.append("\n");

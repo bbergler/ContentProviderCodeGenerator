@@ -13,6 +13,7 @@ public class FieldData {
 
     public String name;
     public String type;
+    public String default_value;
 
     public int version;
 
@@ -41,6 +42,7 @@ public class FieldData {
         dbIsPrimaryKey = json.optBoolean("is_primary_key", false);
         dbIsId = json.optBoolean("is_id", false);
         annotation = json.optString("annotated_with","");
+        default_value = json.optString("default_value","");
         customValue = json.optString("custom_value","");
         constructor = json.optBoolean("ctor",false);
         dbIsAutoincrement = json.optBoolean("is_autoincrement", false);
